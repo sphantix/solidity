@@ -64,33 +64,32 @@ unsigned int mostSignificantBit(bigint const& _number)
 #endif
 }
 
-/// Check whether (_base ** _exp) fits into 4096 bits.
-bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
+/// Check whether (_base ** _exp) fits into _bitsMax bits.
+bool fitsPrecisionExp(bigint const& _base, bigint const& _exp, unsigned _bitsMax = 4096)
 {
 	if (_base == 0)
 		return true;
 
 	solAssert(_base > 0, "");
 
-	size_t const bitsMax = 4096;
-
 	unsigned mostSignificantBaseBit = mostSignificantBit(_base);
 	if (mostSignificantBaseBit == 0) // _base == 1
 		return true;
-	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
+	if (mostSignificantBaseBit > _bitsMax) // _base >= 2 ^ bitsMax
 		return false;
 
 	bigint bitsNeeded = _exp * (mostSignificantBaseBit + 1);
 
-	return bitsNeeded <= bitsMax;
+	return bitsNeeded <= _bitsMax;
 }
 
-/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
+/// Checks whether _mantissa * (X ** _exp) fits into _bitsMax bits,
 /// where X is given indirectly via _log2OfBase = log2(X).
 bool fitsPrecisionBaseX(
 	bigint const& _mantissa,
 	double _log2OfBase,
-	uint32_t _exp
+	uint32_t _exp,
+	unsigned _bitsMax = 4096
 )
 {
 	if (_mantissa == 0)
@@ -98,27 +97,25 @@ bool fitsPrecisionBaseX(
 
 	solAssert(_mantissa > 0, "");
 
-	size_t const bitsMax = 4096;
-
 	unsigned mostSignificantMantissaBit = mostSignificantBit(_mantissa);
-	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
+	if (mostSignificantMantissaBit > _bitsMax) // _mantissa >= 2 ^ maxBits
 		return false;
 
 	bigint bitsNeeded = mostSignificantMantissaBit + bigint(floor(double(_exp) * _log2OfBase)) + 1;
-	return bitsNeeded <= bitsMax;
+	return bitsNeeded <= _bitsMax;
 }
 
-/// Checks whether _mantissa * (10 ** _expBase10) fits into 4096 bits.
-bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10)
+/// Checks whether _mantissa * (10 ** _expBase10) fits into _bitsMax bits.
+bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10, unsigned _bitsMax = 4096)
 {
 	double const log2Of10AwayFromZero = 3.3219280948873624;
-	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10);
+	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10, _bitsMax);
 }
 
-/// Checks whether _mantissa * (2 ** _expBase10) fits into 4096 bits.
-bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
+/// Checks whether _mantissa * (2 ** _expBase10) fits into _bitsMax bits.
+bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2, unsigned _bitsMax = 4096)
 {
-	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
+	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2, _bitsMax);
 }
 
 }
@@ -775,7 +772,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 
 			if (exp < 0)
 			{
-				if (!fitsPrecisionBase10(abs(value.denominator()), expAbs))
+				if (!fitsPrecisionBase10(abs(value.denominator()), expAbs, 4096))
 					return make_tuple(false, rational(0));
 				value /= boost::multiprecision::pow(
 					bigint(10),
@@ -784,7 +781,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			}
 			else if (exp > 0)
 			{
-				if (!fitsPrecisionBase10(abs(value.numerator()), expAbs))
+				if (!fitsPrecisionBase10(abs(value.numerator()), expAbs, 4096))
 					return make_tuple(false, rational(0));
 				value *= boost::multiprecision::pow(
 					bigint(10),
