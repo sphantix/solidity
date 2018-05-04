@@ -604,7 +604,7 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 
 	unsigned const bitsAvailable = m_totalBits - (isSigned() ? 1 : 0);
 	solAssert(
-		boost::multiprecision::log2(boost::multiprecision::pow(bigint(10), m_fractionalDigits) - 1) <= m_totalBits,
+		fitsPrecisionExp(10, m_fractionalDigits, bitsAvailable),
 		"Number of fractional digits do not fit the specified bit width"
 	);
 }
