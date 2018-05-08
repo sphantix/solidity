@@ -11,6 +11,7 @@ Breaking Changes:
  * Type Checker: Disallow arithmetic operations for Boolean variables.
  * Disallow trailing dots that are not followed by a number.
  * Remove assembly instructions ``sha3`` and ``suicide``
+ * Remove ``constant`` as function state mutability modifer.
 
 Language Features:
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
