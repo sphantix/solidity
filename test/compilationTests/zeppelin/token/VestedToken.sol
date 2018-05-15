@@ -106,7 +106,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @param time uint64 The specific time.
    * @return An uint256 representing a holder's total amount of transferable tokens.
    */
-  function transferableTokens(address holder, uint64 time) view public returns (uint256) {
+  function transferableTokens(address holder, uint64 time) public returns (uint256) {
     uint256 grantIndex = tokenGrantsCount(holder);
 
     if (grantIndex == 0) return balanceOf(holder); // shortcut for holder without grants
