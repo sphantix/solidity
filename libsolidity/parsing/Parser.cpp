@@ -239,10 +239,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		Token::Value currentTokenValue = m_scanner->currentToken();
 		if (currentTokenValue == Token::RBrace)
 			break;
-		else if (
-			currentTokenValue == Token::Function ||
-			(currentTokenValue == Token::Identifier && m_scanner->currentLiteral() == "constructor")
-		)
+		else if (currentTokenValue == Token::Function || currentTokenValue == Token::Constructor)
 			// This can be a function or a state variable of function type (especially
 			// complicated to distinguish fallback function from function type state variable)
 			subNodes.push_back(parseFunctionDefinitionOrFunctionTypeStateVariable(name.get()));
@@ -344,7 +341,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 
 	result.isConstructor = false;
 
-	if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
+	if (m_scanner->currentToken() == Token::Constructor)
 		result.isConstructor = true;
 	else if (m_scanner->currentToken() != Token::Function)
 		solAssert(false, "Function or constructor expected.");
@@ -353,10 +350,17 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 	if (result.isConstructor || _forceEmptyName || m_scanner->currentToken() == Token::LParen)
 		result.name = make_shared<ASTString>();
 	else
-		result.name = expectIdentifierToken();
+	{
+		result.name = make_shared<ASTString>(m_scanner->currentLiteral());
+		if (!result.name->empty() && _contractName && *result.name == *_contractName)
+			parserError(string(
+				"Defining constructors as functions with the same name as the contract is not allowed. Use \"constructor(...) { ... }\" instead."
+			));
+		if (m_scanner->currentToken() != Token::Constructor)
+			expectToken(Token::Identifier, false);
+		m_scanner->next();
+	}
 
-	if (!result.name->empty() && _contractName && *result.name == *_contractName)
-		result.isConstructor = true;
 
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
