@@ -210,6 +210,17 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 	return true;
 }
 
+bool SyntaxChecker::visit(ContractDefinition const& _contract)
+{
+	ASTString const& contractName = _contract.name();
+	for (const FunctionDefinition* const function : _contract.definedFunctions())
+		if (function->name() == contractName)
+			m_errorReporter.syntaxError(function->location(),
+			"Defining constructors as functions with the same name as the contract is not allowed. "
+			"Use \"constructor(...) { ... }\" instead.");
+	return true;
+}
+
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
@@ -224,7 +235,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		else
 			m_errorReporter.warning(_function.location(), "Modifiers of functions without implementation are ignored." );
 	}
-	if (_function.name() == "constructor")
+	if (_function.name() == "constructor" && !_function.isConstructor())
 		m_errorReporter.warning(_function.location(),
 			"This function is named \"constructor\" but is not the constructor of the contract. "
 			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."
