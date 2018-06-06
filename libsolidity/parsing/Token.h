@@ -177,7 +177,6 @@ namespace solidity
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
 	K(Using, "using", 0)                                               \
-	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
 	K(While, "while", 0)                                               \
 	\

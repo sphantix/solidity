@@ -552,7 +552,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		type = _lookAheadArrayType;
 	else
 	{
-		type = parseTypeName(_options.allowVar);
+		type = parseTypeName();
 		if (type != nullptr)
 			nodeFactory.setEndPositionFromNode(type);
 	}
@@ -619,7 +619,6 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	if (_options.allowEmptyName && m_scanner->currentToken() != Token::Identifier)
 	{
 		identifier = make_shared<ASTString>("");
-		solAssert(!_options.allowVar, ""); // allowEmptyName && allowVar makes no sense
 		if (type)
 			nodeFactory.setEndPositionFromNode(type);
 		// if type is null this has already caused an error
@@ -714,7 +713,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	if (m_scanner->currentToken() == Token::Mul)
 		m_scanner->next();
 	else
-		typeName = parseTypeName(false);
+		typeName = parseTypeName();
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<UsingForDirective>(library, typeName);
@@ -777,7 +776,7 @@ ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTN
 	return type;
 }
 
-ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
+ASTPointer<TypeName> Parser::parseTypeName()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -790,12 +789,6 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
 		ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
-		m_scanner->next();
-	}
-	else if (token == Token::Var)
-	{
-		if (!_allowVar)
-			parserError(string("Expected explicit type name."));
 		m_scanner->next();
 	}
 	else if (token == Token::Function)
@@ -844,8 +837,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
 	m_scanner->next();
 	expectToken(Token::Arrow);
-	bool const allowVar = false;
-	ASTPointer<TypeName> valueType = parseTypeName(allowVar);
+	ASTPointer<TypeName> valueType = parseTypeName();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
 	return nodeFactory.createNode<Mapping>(keyType, valueType);
@@ -1229,51 +1221,12 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		nodeFactory.setLocation(_lookAheadArrayType->location());
 	vector<ASTPointer<VariableDeclaration>> variables;
 	ASTPointer<Expression> value;
-	if (
-		!_lookAheadArrayType &&
-		m_scanner->currentToken() == Token::Var &&
-		m_scanner->peekNextToken() == Token::LParen
-	)
-	{
-		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
-		m_scanner->next();
-		m_scanner->next();
-		if (m_scanner->currentToken() != Token::RParen)
-			while (true)
-			{
-				ASTPointer<VariableDeclaration> var;
-				if (
-					m_scanner->currentToken() != Token::Comma &&
-					m_scanner->currentToken() != Token::RParen
-				)
-				{
-					ASTNodeFactory varDeclNodeFactory(*this);
-					varDeclNodeFactory.markEndPosition();
-					ASTPointer<ASTString> name = expectIdentifierToken();
-					var = varDeclNodeFactory.createNode<VariableDeclaration>(
-						ASTPointer<TypeName>(),
-						name,
-						ASTPointer<Expression>(),
-						VariableDeclaration::Visibility::Default
-					);
-				}
-				variables.push_back(var);
-				if (m_scanner->currentToken() == Token::RParen)
-					break;
-				else
-					expectToken(Token::Comma);
-			}
-		nodeFactory.markEndPosition();
-		m_scanner->next();
-	}
-	else
-	{
-		VarDeclParserOptions options;
-		options.allowVar = true;
-		options.allowLocationSpecifier = true;
-		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
-		nodeFactory.setEndPositionFromNode(variables.back());
-	}
+
+	VarDeclParserOptions options;
+	options.allowLocationSpecifier = true;
+	variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
+	nodeFactory.setEndPositionFromNode(variables.back());
+
 	if (m_scanner->currentToken() == Token::Assign)
 	{
 		m_scanner->next();
@@ -1386,7 +1339,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	else if (m_scanner->currentToken() == Token::New)
 	{
 		expectToken(Token::New);
-		ASTPointer<TypeName> typeName(parseTypeName(false));
+		ASTPointer<TypeName> typeName(parseTypeName());
 		if (typeName)
 			nodeFactory.setEndPositionFromNode(typeName);
 		else
@@ -1595,7 +1548,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	Token::Value token(m_scanner->currentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
-	if (token == Token::Mapping || token == Token::Function || token == Token::Var)
+	if (token == Token::Mapping || token == Token::Function)
 		return LookAheadInfo::VariableDeclaration;
 	if (mightBeTypeName)
 	{
