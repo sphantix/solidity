@@ -344,11 +344,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	m_scanner->next();
 
 	if (result.isConstructor)
-		result.name = make_shared<ASTString>("constructor");
+		result.name = make_shared<ASTString>();
 	else if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
 		result.name = make_shared<ASTString>();
 	else if (m_scanner->currentToken() == Token::Constructor && !result.isConstructor)
-		result.name = getLiteralAndAdvance();
+		fatalParserError(string(
+			"This function is named \"constructor\" but is not the constructor of the contract. "
+			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."
+		));
 	else
 		result.name = expectIdentifierToken();
 
