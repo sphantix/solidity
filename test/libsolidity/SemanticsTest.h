@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/FormattedScope.h>
+#include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/libsolidity/TestCase.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -34,52 +34,73 @@ namespace solidity
 namespace test
 {
 
-struct SyntaxTestError
-{
-	std::string type;
-	std::string message;
-	int locationStart;
-	int locationEnd;
-	bool operator==(SyntaxTestError const& _rhs) const
-	{
-		return type == _rhs.type &&
-			message == _rhs.message &&
-			locationStart == _rhs.locationStart &&
-			locationEnd == _rhs.locationEnd;
-	}
-};
-
-
-class SyntaxTest: AnalysisFramework, public TestCase
+class SemanticsTest: SolidityExecutionFramework, public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(std::string const& _filename)
-	{ return std::unique_ptr<TestCase>(new SyntaxTest(_filename)); }
-	SyntaxTest(std::string const& _filename);
+	{ return std::unique_ptr<TestCase>(new SemanticsTest(_filename)); }
+	SemanticsTest(std::string const& _filename);
+	virtual ~SemanticsTest() {}
 
 	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	virtual void printContract(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
-	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
-	{
-		if (!m_errorList.empty())
-			printErrorList(_stream, m_errorList, _linePrefix, false);
-	}
+	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
-	static std::string errorMessage(Exception const& _e);
-private:
-	static void printErrorList(
-		std::ostream& _stream,
-		std::vector<SyntaxTestError> const& _errors,
-		std::string const& _linePrefix,
-		bool const _formatted = false
+	struct ByteRangeFormat
+	{
+		enum Type {
+			Bool,
+			String,
+			Dec,
+			Hash,
+			Hex,
+			HexString,
+			RawBytes,
+			SignedDec,
+			DynString
+		};
+
+		std::size_t length;
+		Type type;
+		std::string tryFormat(bytes::const_iterator _it, bytes::const_iterator _end) const;
+	};
+
+	static std::string bytesToString(
+		bytes const& _bytes,
+		std::vector<ByteRangeFormat> const& _formatList
+	);
+	static bytes stringToBytes(
+		std::string _list,
+		std::vector<ByteRangeFormat>* _formatList = nullptr
 	);
 
-	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
+	static std::string ipcPath;
+private:
+	void printCalls(
+		bool _actualResults,
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		bool const _formatted = false
+	) const;
+
+	struct SemanticsTestFunctionCall
+	{
+		std::string signature;
+		std::string arguments;
+		bytes argumentBytes;
+		u256 value;
+		std::string expectedResult;
+		bytes expectedBytes;
+		std::vector<ByteRangeFormat> expectedFormat;
+	};
+
+	static std::vector<SemanticsTestFunctionCall> parseCalls(std::istream& _stream);
+
 
 	std::string m_source;
-	std::vector<SyntaxTestError> m_expectations;
-	std::vector<SyntaxTestError> m_errorList;
+	std::vector<SemanticsTestFunctionCall> m_calls;
+	std::vector<bytes> m_results;
 };
 
 }
