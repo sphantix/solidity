@@ -493,6 +493,7 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"after",
 		"case",
 		"catch",
+		"constructor"
 		"default",
 		"final",
 		"in",

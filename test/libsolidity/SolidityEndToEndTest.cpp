@@ -1283,7 +1283,7 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 			}
 			struct emptyStruct{
 			}
-			function test(){
+			constructor(){
 				toDelete = 5;
 				str.topValue = 1;
 				str.topMapping[0] = 1;
@@ -1361,7 +1361,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 	char const* sourceCode = R"(
 		contract test {
 			mapping(uint => uint) data;
-			function test() {
+			constructor() {
 				data[7] = 8;
 			}
 			function get(uint key) returns (uint value) {
@@ -1385,7 +1385,7 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 	char const* sourceCode = R"(
 		contract test {
 			uint256 public data;
-			function test() {
+			constructor() {
 				data = 8;
 			}
 		}
@@ -1404,7 +1404,7 @@ BOOST_AUTO_TEST_CASE(array_accessor)
 			struct st { uint a; uint[] finalArray; }
 			mapping(uint256 => mapping(uint256 => st[5])) public multiple_map;
 
-			function test() {
+			constructor() {
 				data[0] = 8;
 				dynamicData.length = 3;
 				dynamicData[2] = 8;
@@ -1434,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(accessors_mapping_for_array)
 		contract test {
 			mapping(uint => uint[8]) public data;
 			mapping(uint => uint[]) public dynamicData;
-			function test() {
+			constructor() {
 				data[2][2] = 8;
 				dynamicData[2].length = 3;
 				dynamicData[2][2] = 8;
@@ -1456,7 +1456,7 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 			bytes6 public name;
 			bytes32 public a_hash;
 			address public an_address;
-			function test() {
+			constructor() {
 				data = 8;
 				name = "Celina";
 				a_hash = keccak256(123);
@@ -1482,7 +1482,7 @@ BOOST_AUTO_TEST_CASE(complex_accessors)
 			mapping(uint256 => bool) public to_bool_map;
 			mapping(uint256 => uint256) public to_uint_map;
 			mapping(uint256 => mapping(uint256 => uint256)) public to_multiple_map;
-			function test() {
+			constructor() {
 				to_string_map[42] = "24";
 				to_bool_map[42] = false;
 				to_uint_map[42] = 12;
@@ -1503,7 +1503,7 @@ BOOST_AUTO_TEST_CASE(struct_accessor)
 		contract test {
 			struct Data { uint a; uint8 b; mapping(uint => uint) c; bool d; }
 			mapping(uint => Data) public data;
-			function test() {
+			constructor() {
 				data[7].a = 1;
 				data[7].b = 2;
 				data[7].c[0] = 3;
@@ -1519,7 +1519,7 @@ BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() payable {}
+			constructor() payable {}
 			function getBalance() returns (uint256 balance) {
 				return address(this).balance;
 			}
@@ -1533,7 +1533,7 @@ BOOST_AUTO_TEST_CASE(blockchain)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() payable {}
+			constructor() payable {}
 			function someInfo() payable returns (uint256 value, address coinbase, uint256 blockNumber) {
 				value = msg.value;
 				coinbase = block.coinbase;
@@ -1783,7 +1783,7 @@ BOOST_AUTO_TEST_CASE(send_ether)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() payable {}
+			constructor() payable {}
 			function a(address addr, uint amount) returns (uint ret) {
 				addr.send(amount);
 				return address(this).balance;
@@ -1801,7 +1801,7 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function A() payable {}
+			constructor() payable {}
 			function a(address addr, uint amount) returns (uint) {
 				addr.transfer(amount);
 				return this.balance;
@@ -1958,7 +1958,7 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() {
+			constructor() {
 				log1(1, 2);
 			}
 		}
@@ -1975,7 +1975,7 @@ BOOST_AUTO_TEST_CASE(suicide)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() payable {}
+			constructor() payable {}
 			function a(address receiver) returns (uint ret) {
 				suicide(receiver);
 				return 10;
@@ -1994,7 +1994,7 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() payable {}
+			constructor() payable {}
 			function a(address receiver) returns (uint ret) {
 				selfdestruct(receiver);
 				return 10;
@@ -2417,7 +2417,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 			bytes3 name;
 			bool flag;
 
-			function Helper(bytes3 x, bool f) {
+			constructor(bytes3 x, bool f) {
 				name = x;
 				flag = f;
 			}
@@ -2426,7 +2426,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 		}
 		contract Main {
 			Helper h;
-			function Main() {
+			constructor() {
 				h = new Helper("abc", true);
 			}
 			function getFlag() returns (bool ret) { return h.getFlag(); }
@@ -2445,7 +2445,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments_external)
 			bytes3 name;
 			bool flag;
 
-			function Main(bytes3 x, bool f) {
+			constructor(bytes3 x, bool f) {
 				name = x;
 				flag = f;
 			}
@@ -2465,7 +2465,7 @@ BOOST_AUTO_TEST_CASE(constructor_with_long_arguments)
 			string public a;
 			string public b;
 
-			function Main(string _a, string _b) {
+			constructor(string _a, string _b) {
 				a = _a;
 				b = _b;
 			}
@@ -2493,7 +2493,7 @@ BOOST_AUTO_TEST_CASE(constructor_static_array_argument)
 			uint public a;
 			uint[3] public b;
 
-			function C(uint _a, uint[3] _b) {
+			constructor(uint _a, uint[3] _b) {
 				a = _a;
 				b = _b;
 			}
@@ -2513,7 +2513,7 @@ BOOST_AUTO_TEST_CASE(constant_var_as_array_length)
 			uint constant LEN = 3;
 			uint[LEN] public a;
 
-			function C(uint[LEN] _a) {
+			constructor(uint[LEN] _a) {
 				a = _a;
 			}
 		}
@@ -2530,7 +2530,7 @@ BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 		contract Test {
 			bytes3 name;
 			bool flag;
-			function Test() {
+			constructor() {
 				setName("abc");
 			}
 			function getName() returns (bytes3 ret) { return name; }
@@ -2549,7 +2549,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 		}
 		contract test {
 			helper h;
-			function test() payable { h = new helper(); h.send(5); }
+			constructor() payable { h = new helper(); h.send(5); }
 			function getBalance() returns (uint256 myBalance, uint256 helperBalance) {
 				myBalance = this.balance;
 				helperBalance = h.balance;
@@ -2574,7 +2574,7 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 		}
 		contract test {
 			helper h;
-			function test() payable { h = new helper(); }
+			constructor() payable { h = new helper(); }
 			function sendAmount(uint amount) payable returns (uint256 bal) {
 				return h.getBalance.value(amount)();
 			}
@@ -2605,7 +2605,7 @@ BOOST_AUTO_TEST_CASE(value_complex)
 		}
 		contract test {
 			helper h;
-			function test() payable { h = new helper(); }
+			constructor() payable { h = new helper(); }
 			function sendAmount(uint amount) payable returns (uint256 bal) {
 				var x1 = h.getBalance.value(amount);
 				uint someStackElement = 20;
@@ -2628,7 +2628,7 @@ BOOST_AUTO_TEST_CASE(value_insane)
 		}
 		contract test {
 			helper h;
-			function test() payable { h = new helper(); }
+			constructor() payable { h = new helper(); }
 			function sendAmount(uint amount) returns (uint256 bal) {
 				var x1 = h.getBalance.value;
 				var x2 = x1(amount).gas;
@@ -2647,7 +2647,7 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 		contract Helper {
 			bytes3 name;
 			bool flag;
-			function Helper(bytes3 x, bool f) payable {
+			constructor(bytes3 x, bool f) payable {
 				name = x;
 				flag = f;
 			}
@@ -2656,8 +2656,8 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 		}
 		contract Main {
 			Helper h;
-			function Main() payable {
-				h = (new Helper).value(10)("abc", true);
+			constructor() payable {
+				h = (new Helper).value(10)('abc', true);
 			}
 			function getFlag() returns (bool ret) { return h.getFlag(); }
 			function getName() returns (bytes3 ret) { return h.getName(); }
@@ -2750,12 +2750,12 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments)
 	char const* sourceCode = R"(
 		contract BaseBase {
 			uint m_a;
-			function BaseBase(uint a) {
+			constructor(uint a) {
 				m_a = a;
 			}
 		}
 		contract Base is BaseBase(7) {
-			function Base() {
+			constructor() {
 				m_a *= m_a;
 			}
 		}
@@ -2772,7 +2772,7 @@ BOOST_AUTO_TEST_CASE(function_usage_in_constructor_arguments)
 	char const* sourceCode = R"(
 		contract BaseBase {
 			uint m_a;
-			function BaseBase(uint a) {
+			constructor(uint a) {
 				m_a = a;
 			}
 			function g() returns (uint r) { return 2; }
@@ -2792,7 +2792,7 @@ BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
 	char const* sourceCode = R"(
 		contract BaseBase {
 			uint m_a;
-			function BaseBase(uint a) {
+			constructor(uint a) {
 				m_a = a;
 			}
 			function overridden() returns (uint r) { return 1; }
@@ -2814,7 +2814,7 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 	char const* sourceCode = R"(
 		contract BaseBase {
 			uint m_a;
-			function BaseBase(uint a) {
+			constructor(uint a) {
 				m_a = a;
 			}
 		}
@@ -2831,7 +2831,7 @@ BOOST_AUTO_TEST_CASE(internal_constructor)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function C() internal {}
+			constructor() internal {}
 		}
 	)";
 	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "C").empty());
@@ -2924,7 +2924,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function A() mod1 { f1(); }
+			constructor() mod1 { f1(); }
 			function f1() mod2 { data |= 0x1; }
 			function f2() { data |= 0x20; }
 			function f3() { }
@@ -2947,7 +2947,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function A() mod1 { data |= 2; }
+			constructor() mod1 { data |= 2; }
 			modifier mod1 { data |= 1; _; }
 			function getData() returns (uint r) { return data; }
 		}
@@ -3073,7 +3073,7 @@ BOOST_AUTO_TEST_CASE(super_in_constructor)
 		contract A { function f() returns (uint r) { return 1; } }
 		contract B is A { function f() returns (uint r) { return super.f() | 2; } }
 		contract C is A { function f() returns (uint r) { return super.f() | 4; } }
-		contract D is B, C { uint data; function D() { data = super.f() | 8; } function f() returns (uint r) { return data; } }
+		contract D is B, C { uint data; constructor() { data = super.f() | 8; } function f() returns (uint r) { return data; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(1 | 2 | 4 | 8));
@@ -3789,7 +3789,7 @@ BOOST_AUTO_TEST_CASE(generic_call)
 				function receive(uint256 x) payable { received = x; }
 			}
 			contract sender {
-				function sender() payable {}
+				constructor() payable {}
 				function doSend(address rec) returns (uint d)
 				{
 					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
@@ -3814,7 +3814,7 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 			}
 			contract Sender {
 				uint public received;
-				function Sender() payable { }
+				constructor() payable { }
 				function doSend(address rec) returns (uint d)
 				{
 					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
@@ -3844,14 +3844,14 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				uint public received;
 				address public sender;
 				uint public value;
-				function Receiver() payable {}
+				constructor() payable {}
 				function receive(uint256 x) payable { received = x; sender = msg.sender; value = msg.value; }
 			}
 			contract Sender {
 				uint public received;
 				address public sender;
 				uint public value;
-				function Sender() payable {}
+				constructor() payable {}
 				function doSend(address rec) payable
 				{
 					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
@@ -3971,7 +3971,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 			function() { received = 0x80; }
 		}
 		contract sender {
-			function sender() { rec = new receiver(); }
+			constructor() { rec = new receiver(); }
 			function() { savedData = msg.data; }
 			function forward() returns (bool) { !rec.call(savedData); return true; }
 			function clear() returns (bool) { delete savedData; return true; }
@@ -4045,7 +4045,7 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 			function() { received = 0x80; }
 		}
 		contract sender {
-			function sender() { rec = new receiver(); }
+			constructor() { rec = new receiver(); }
 			function() { savedData1 = savedData2 = msg.data; }
 			function forward(bool selector) returns (bool) {
 				if (selector) { rec.call(savedData1); delete savedData1; }
@@ -4259,7 +4259,7 @@ BOOST_AUTO_TEST_CASE(using_enums)
 	char const* sourceCode = R"(
 			contract test {
 				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-				function test()
+				constructor()
 				{
 					choices = ActionChoices.GoStraight;
 				}
@@ -4279,7 +4279,7 @@ BOOST_AUTO_TEST_CASE(enum_explicit_overflow)
 	char const* sourceCode = R"(
 			contract test {
 				enum ActionChoices { GoLeft, GoRight, GoStraight }
-				function test()
+				constructor()
 				{
 				}
 				function getChoiceExp(uint x) returns (uint d)
@@ -4424,7 +4424,7 @@ BOOST_AUTO_TEST_CASE(inline_member_init)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test(){
+			constructor(){
 				m_b = 6;
 				m_c = 8;
 			}
@@ -4446,12 +4446,12 @@ BOOST_AUTO_TEST_CASE(inline_member_init_inheritence)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function Base(){}
+			constructor(){}
 			uint m_base = 5;
 			function getBMember() returns (uint i) { return m_base; }
 		}
 		contract Derived is Base {
-			function Derived(){}
+			constructor(){}
 			uint m_derived = 6;
 			function getDMember() returns (uint i) { return m_derived; }
 		}
@@ -5647,14 +5647,14 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function Base(uint i)
+			constructor(uint i)
 			{
 				m_i = i;
 			}
 			uint public m_i;
 		}
 		contract Derived is Base {
-			function Derived(uint i) Base(i)
+			constructor(uint i) Base(i)
 			{}
 		}
 		contract Final is Derived(4) {
@@ -5668,17 +5668,17 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function Base(uint j)
+			constructor(uint j)
 			{
 				m_i = j;
 			}
 			uint public m_i;
 		}
 		contract Base1 is Base {
-			function Base1(uint k) Base(k*k) {}
+			constructor(uint k) Base(k*k) {}
 		}
 		contract Derived is Base, Base1 {
-			function Derived(uint i) Base(i) Base1(i)
+			constructor(uint i) Base(i) Base1(i)
 			{}
 		}
 		contract Final is Derived(4) {
@@ -5692,7 +5692,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function Base(uint i)
+			constructor(uint i)
 			{
 				m_i = i;
 			}
@@ -5700,7 +5700,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 		}
 		contract Base1 is Base(3) {}
 		contract Derived is Base, Base1 {
-			function Derived(uint i) Base(i) {}
+			constructor(uint i) Base(i) {}
 		}
 		contract Final is Derived(4) {
 		}
@@ -6063,7 +6063,7 @@ BOOST_AUTO_TEST_CASE(packed_storage_signed)
 BOOST_AUTO_TEST_CASE(external_types_in_calls)
 {
 	char const* sourceCode = R"(
-		contract C1 { C1 public bla; function C1(C1 x) { bla = x; } }
+		contract C1 { C1 public bla; constructor(C1 x) { bla = x; } }
 		contract C {
 			function test() returns (C1 x, C1 y) {
 				C1 c = new C1(C1(9));
@@ -6276,7 +6276,7 @@ BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 			testStruct data1;
 			testStruct data2;
 			testStruct data3;
-			function test()
+			constructor()
 			{
 				data1.m_value = 2;
 			}
@@ -6308,7 +6308,7 @@ BOOST_AUTO_TEST_CASE(struct_delete_member)
 				uint m_value;
 			}
 			testStruct data1;
-			function test()
+			constructor()
 			{
 				data1.m_value = 2;
 			}
@@ -6335,7 +6335,7 @@ BOOST_AUTO_TEST_CASE(struct_delete_struct_in_mapping)
 			}
 			mapping (uint => testStruct) campaigns;
 
-			function test()
+			constructor()
 			{
 				campaigns[0].m_value = 2;
 			}
@@ -6378,7 +6378,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function A()
+			constructor()
 			{
 				this.call("123");
 			}
@@ -6404,7 +6404,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 		contract A {
 			uint public test = 1;
 			uint[3] arr;
-			function A()
+			constructor()
 			{
 				uint index = 5;
 				test = arr[index];
@@ -6440,7 +6440,7 @@ BOOST_AUTO_TEST_CASE(failing_send)
 			}
 		}
 		contract Main {
-			function Main() payable {}
+			constructor() payable {}
 			function callHelper(address _a) returns (bool r, uint bal) {
 				r = !_a.send(5);
 				bal = this.balance;
@@ -6463,7 +6463,7 @@ BOOST_AUTO_TEST_CASE(send_zero_ether)
 			}
 		}
 		contract Main {
-			function Main() payable {}
+			constructor() payable {}
 			function s() returns (bool) {
 				var r = new Receiver();
 				return r.send(0);
@@ -6480,7 +6480,7 @@ BOOST_AUTO_TEST_CASE(reusing_memory)
 	char const* sourceCode = R"(
 		contract Helper {
 			uint public flag;
-			function Helper(uint x) {
+			constructor(uint x) {
 				flag = x;
 			}
 		}
@@ -6711,7 +6711,7 @@ BOOST_AUTO_TEST_CASE(bytes_in_constructors_unpacker)
 		contract Test {
 			uint public m_x;
 			bytes public m_s;
-			function Test(uint x, bytes s) {
+			constructor(uint x, bytes s) {
 				m_x = x;
 				m_s = s;
 			}
@@ -6732,7 +6732,7 @@ BOOST_AUTO_TEST_CASE(bytes_in_constructors_packer)
 		contract Base {
 			uint public m_x;
 			bytes m_s;
-			function Base(uint x, bytes s) {
+			constructor(uint x, bytes s) {
 				m_x = x;
 				m_s = s;
 			}
@@ -6741,7 +6741,7 @@ BOOST_AUTO_TEST_CASE(bytes_in_constructors_packer)
 			}
 		}
 		contract Main is Base {
-			function Main(bytes s, uint x) Base(x, f(s)) {}
+			constructor(bytes s, uint x) Base(x, f(s)) {}
 			function f(bytes s) returns (bytes) {
 				return s;
 			}
@@ -6771,7 +6771,7 @@ BOOST_AUTO_TEST_CASE(arrays_in_constructors)
 		contract Base {
 			uint public m_x;
 			address[] m_s;
-			function Base(uint x, address[] s) {
+			constructor(uint x, address[] s) {
 				m_x = x;
 				m_s = s;
 			}
@@ -6780,7 +6780,7 @@ BOOST_AUTO_TEST_CASE(arrays_in_constructors)
 			}
 		}
 		contract Main is Base {
-			function Main(address[] s, uint x) Base(x, f(s)) {}
+			constructor(address[] s, uint x) Base(x, f(s)) {}
 			function f(address[] s) returns (address[]) {
 				return s;
 			}
@@ -6810,7 +6810,7 @@ BOOST_AUTO_TEST_CASE(fixed_arrays_in_constructors)
 		contract Creator {
 			uint public r;
 			address public ch;
-			function Creator(address[3] s, uint x) {
+			constructor(address[3] s, uint x) {
 				r = x;
 				ch = s[2];
 			}
@@ -7230,7 +7230,7 @@ BOOST_AUTO_TEST_CASE(struct_constructor_nested)
 			struct X { uint x1; uint x2; }
 			struct S { uint s1; uint[3] s2; X s3; }
 			S s;
-			function C() {
+			constructor() {
 				uint[3] memory s2;
 				s2[1] = 9;
 				s = S(1, s2, X(4, 5));
@@ -7256,7 +7256,7 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 		contract C {
 			struct S { uint a; bool x; }
 			S public s;
-			function C() {
+			constructor() {
 				s = S({a: 1, x: true});
 			}
 		}
@@ -7538,7 +7538,7 @@ BOOST_AUTO_TEST_CASE(constant_string_literal)
 			bytes32 constant public b = "abcdefghijklmnopq";
 			string constant public x = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
 
-			function Test() {
+			constructor() {
 				var xx = x;
 				var bb = b;
 			}
@@ -7671,7 +7671,7 @@ BOOST_AUTO_TEST_CASE(strings_in_struct)
 				string last;
 			}
 
-			function buggystruct(){
+			constructor(){
 				bug = Buggy(10, 20, 30, "asdfghjkl");
 			}
 			function getFirst() returns (uint)
@@ -7946,7 +7946,7 @@ BOOST_AUTO_TEST_CASE(calldata_offset)
 		{
 			address[] _arr;
 			string public last = "nd";
-			function CB(address[] guardians)
+			constructor(address[] guardians)
 			{
 				_arr = guardians;
 			}
@@ -7971,7 +7971,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 	char const* sourceCode = R"(
 		library lib {}
 		contract c {
-			function c() payable {}
+			constructor() payable {}
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
@@ -8392,7 +8392,7 @@ BOOST_AUTO_TEST_CASE(string_allocation_bug)
 		{
 			struct s { uint16 x; uint16 y; string a; string b;}
 			s[2] public p;
-			function Sample() {
+			constructor() {
 				s memory m;
 				m.x = 0xbbbb;
 				m.y = 0xcccc;
@@ -9328,10 +9328,10 @@ BOOST_AUTO_TEST_CASE(skip_dynamic_types_for_structs)
 BOOST_AUTO_TEST_CASE(failed_create)
 {
 	char const* sourceCode = R"(
-		contract D { function D() payable {} }
+		contract D { constructor() payable {} }
 		contract C {
 			uint public x;
-			function C() payable {}
+			constructor() payable {}
 			function f(uint amount) returns (address) {
 				x++;
 				return (new D).value(amount)();
@@ -9374,7 +9374,7 @@ BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 	char const* sourceCode = R"(
 		contract C {
 			bool public success;
-			function C() public {
+			constructor() public {
 				// Make memory dirty.
 				assembly {
 					for { let i := 0 } lt(i, 64) { i := add(i, 1) } {
@@ -9471,7 +9471,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 		}
 		contract Fund is mutexed {
 			uint shares;
-			function Fund() payable { shares = msg.value; }
+			constructor() payable { shares = msg.value; }
 			function withdraw(uint amount) protected returns (uint) {
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
@@ -9494,7 +9494,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 			uint callDepth;
 			bool protected;
 			function setProtected(bool _protected) { protected = _protected; }
-			function Attacker(Fund _fund) { fund = _fund; }
+			constructor(Fund _fund) { fund = _fund; }
 			function attack() returns (uint) {
 				callDepth = 0;
 				return attackInternal();
@@ -9617,7 +9617,7 @@ BOOST_AUTO_TEST_CASE(payable_constructor)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function C() payable { }
+			constructor() payable { }
 		}
 	)";
 	compileAndRun(sourceCode, 27, "C");
@@ -9899,7 +9899,7 @@ BOOST_AUTO_TEST_CASE(store_function_in_constructor)
 		contract C {
 			uint public result_in_constructor;
 			function (uint) internal returns (uint) x;
-			function C () {
+			constructor() {
 				x = double;
 				result_in_constructor = use(2);
 			}
@@ -9924,7 +9924,7 @@ BOOST_AUTO_TEST_CASE(store_internal_unused_function_in_constructor)
 	char const* sourceCode = R"(
 		contract C {
 			function () internal returns (uint) x;
-			function C () {
+			constructor() {
 				x = unused;
 			}
 			function unused() internal returns (uint) {
@@ -9946,7 +9946,7 @@ BOOST_AUTO_TEST_CASE(store_internal_unused_library_function_in_constructor)
 		library L { function x() internal returns (uint) { return 7; } }
 		contract C {
 			function () internal returns (uint) x;
-			function C () {
+			constructor() {
 				x = L.x;
 			}
 			function t() returns (uint) {
@@ -9964,7 +9964,7 @@ BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime)
 	char const* sourceCode = R"(
 		contract C {
 			uint public initial;
-			function C() {
+			constructor() {
 				initial = double(2);
 			}
 			function double(uint _arg) returns (uint _ret) {
@@ -9986,7 +9986,7 @@ BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime_equality_check)
 	char const* sourceCode = R"(
 		contract C {
 			function (uint) internal returns (uint) x;
-			function C() {
+			constructor() {
 				x = double;
 			}
 			function test() returns (bool) {
@@ -10077,7 +10077,7 @@ BOOST_AUTO_TEST_CASE(mapping_of_functions)
 				success = true;
 			}
 
-			function Flow() {
+			constructor() {
 				stages[msg.sender] = stage0;
 			}
 
@@ -10979,7 +10979,7 @@ BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 		contract D {
 			bytes a = hex"1237651237125387136581271652831736512837126583171583712358126123765123712538713658127165283173651283712658317158371235812612376512371253871365812716528317365128371265831715837123581261237651237125387136581271652831736512837126583171583712358126";
 			bytes b = hex"1237651237125327136581271252831736512837126583171383712358126123765125712538713658127165253173651283712658357158371235812612376512371a5387136581271652a317365128371265a317158371235812612a765123712538a13658127165a83173651283712a58317158371235a126";
-			function D(uint) {}
+			constructor(uint) {}
 		}
 		contract Double {
 			function f() {
@@ -11303,7 +11303,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
 {
 	char const* sourceCode = R"(
 		contract E {
-			function E() {
+			constructor() {
 				revert("message");
 			}
 		}
