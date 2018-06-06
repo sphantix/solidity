@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(string_escape_illegal)
 
 BOOST_AUTO_TEST_CASE(hex_numbers)
 {
-	Scanner scanner(CharStream("var x = 0x765432536763762734623472346;"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Var);
+	Scanner scanner(CharStream("uint x = 0x765432536763762734623472346;"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::UInt);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(octal_numbers)
 
 BOOST_AUTO_TEST_CASE(scientific_notation)
 {
-	Scanner scanner(CharStream("var x = 2e10;"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Var);
+	Scanner scanner(CharStream("uint x = 2e10;"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::UInt);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(trailing_dot)
 
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
-	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Var);
+	Scanner scanner(CharStream("fixed x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Fixed);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Sub);

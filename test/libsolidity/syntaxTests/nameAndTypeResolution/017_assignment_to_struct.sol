@@ -4,9 +4,8 @@ contract test {
     }
     str data;
     function fun() public {
-        var a = data;
+        mapping(uint => uint) a = data;
         data = a;
     }
 }
 // ----
-// Warning: (122-127): Use of the "var" keyword is deprecated.
