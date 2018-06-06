@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(empty_struct)
 {
 	string sourceCode = R"(
 		contract C {
-			struct S { }
+			struct S { uint i; }
 			S s;
 			event e(uint16, S, uint16);
 			function f() returns (uint, S, uint) {
