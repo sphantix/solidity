@@ -18,7 +18,7 @@ contract test {
 // name()
 // -> "Celina"
 // a_hash()
-// -> keccak256(rawbytes(123))
+// -> keccak256(unpadded(123))
 // an_address()
 // -> 0x1337
 // super_secret_data()

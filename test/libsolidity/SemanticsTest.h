@@ -56,12 +56,12 @@ public:
 			Hash,
 			Hex,
 			HexString,
-			RawBytes,
 			SignedDec
 		};
 
 		std::size_t length;
 		Type type;
+		bool padded;
 		std::string tryFormat(bytes::const_iterator _it, bytes::const_iterator _end) const;
 	};
 
@@ -71,7 +71,8 @@ public:
 	);
 	static bytes stringToBytes(
 		std::string _list,
-		std::vector<ByteRangeFormat>* _formatList = nullptr
+		std::vector<ByteRangeFormat>* _formatList = nullptr,
+		bool padded = true
 	);
 
 	static std::string ipcPath;

@@ -117,18 +117,12 @@ std::string SemanticsTest::ByteRangeFormat::tryFormat(
 		case ByteRangeFormat::Dec:
 			result << fromBigEndian<u256>(byteRange);
 			break;
-		case ByteRangeFormat::RawBytes:
-			result << "rawbytes(";
-			for (auto it = byteRange.begin(); it != byteRange.end() - 1; it++)
-				result << "0x" << hex << setw(2) << setfill('0') << int(*it) << ", ";
-			result << "0x" << hex << setw(2) << setfill('0') << int(byteRange.back()) << ")";
-			break;
 		case ByteRangeFormat::Hash:
 		case ByteRangeFormat::Hex:
 			result << "0x" << hex << fromBigEndian<u256>(byteRange);
 			break;
 		case ByteRangeFormat::HexString:
-			if (byteRange.size() % 32 != 0) return {};
+			if (padded && byteRange.size() % 32 != 0) return {};
 			result << "hex\"" << toHex(byteRange) << "\"";
 			break;
 		case ByteRangeFormat::Bool:
@@ -173,9 +167,9 @@ SemanticsTest::ByteRangeFormat ChooseNextRangeFormat(bytes::const_iterator _star
 	solAssert(_start < _end, "");
 	size_t length = size_t(_end - _start);
 	if (length >= 32)
-		return {32, SemanticsTest::ByteRangeFormat::Hex};
+		return {32, SemanticsTest::ByteRangeFormat::Hex, true};
 	else
-		return {length, SemanticsTest::ByteRangeFormat::RawBytes};
+		return {length, SemanticsTest::ByteRangeFormat::HexString, false};
 }
 
 string SemanticsTest::bytesToString(
@@ -186,39 +180,50 @@ string SemanticsTest::bytesToString(
 	string result;
 
 	auto it = _bytes.begin();
+	bool padded = true;
 
-	for(auto const& format: _formatList)
+	auto formatit = _formatList.begin();
+
+	while(it != _bytes.end())
 	{
+		ByteRangeFormat format;
+		if (formatit != _formatList.end())
+			format = *formatit++;
+		else
+			format = ChooseNextRangeFormat(it, _bytes.end());
+		if (!padded && format.padded)
+		{
+			result += ")";
+			padded = true;
+		}
+
+		if (it != _bytes.begin())
+			result += ", ";
+
+		if (padded && !format.padded)
+		{
+			result += "unpadded(";
+			padded = false;
+		}
+
 		string formatted = format.tryFormat(it, _bytes.end());
 		if (!formatted.empty())
 		{
 			result += formatted;
 			it += format.length;
-			if (it != _bytes.end())
-				result += ", ";
-			else
-				break;
 		}
 		else
-			break;
+			formatit = _formatList.end();
 	}
 
-	while (it != _bytes.end())
-	{
-		auto format = ChooseNextRangeFormat(it, _bytes.end());
-		string formatted = format.tryFormat(it, _bytes.end());
-		solAssert(!formatted.empty(), "");
-		result += formatted;
-		it += format.length;
-		if (it != _bytes.end())
-			result += ", ";
-	}
+	if (!padded)
+		result += ")";
 
 	solAssert(stringToBytes(result) == _bytes, "Conversion to string failed.");
 	return result;
 }
 
-bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _formatList)
+bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _formatList, bool padded)
 {
 	bytes result;
 	auto it = _list.begin();
@@ -232,15 +237,16 @@ bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _forma
 				isNegative = true;
 				++it;
 			}
+			ByteRangeFormat::Type type;
 			if (_formatList)
 			{
 				// note that negative hex values are parsed, but reformatted as two's complement
 				if (*it == '0' && it + 1 != _list.end() && *(it + 1) == 'x')
-					_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Hex});
+					type = ByteRangeFormat::Hex;
 				else if (isNegative)
-					_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::SignedDec});
+					type = ByteRangeFormat::SignedDec;
 				else
-					_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Dec});
+					type = ByteRangeFormat::Dec;
 			}
 			if (isNegative) --it;
 
@@ -248,7 +254,17 @@ bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _forma
 			while (it != _list.end() && !isspace(*it) && *it != ',')
 				++it;
 
-			result += toBigEndian(u256(string(valueBegin, it)));
+			bytes newBytes;
+			u256 numberValue(string(valueBegin, it));
+			if (padded)
+				newBytes = toBigEndian(numberValue);
+			else if (numberValue == u256(0))
+				newBytes = bytes{0};
+			else
+				newBytes = toCompactBigEndian(numberValue);
+			result += newBytes;
+			if (_formatList)
+				_formatList->emplace_back(ByteRangeFormat{newBytes.size(), type, padded});
 		}
 		else if (*it == '"')
 		{
@@ -260,15 +276,16 @@ bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _forma
 			bytes stringBytes = asBytes(string(stringBegin, it));
 			expect(it, _list.end(), '"');
 
-			stringBytes += bytes((32 - stringBytes.size() % 32) % 32, 0);
+			if (padded)
+				stringBytes += bytes((32 - stringBytes.size() % 32) % 32, 0);
 			result += stringBytes;
 			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{stringBytes.size(), ByteRangeFormat::String});
+				_formatList->emplace_back(ByteRangeFormat{stringBytes.size(), ByteRangeFormat::String, padded});
 		}
 		else if (starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "keccak256("))
 		{
 			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Hash});
+				_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Hash, padded});
 
 			it += 10; // skip "keccak256("
 
@@ -295,53 +312,55 @@ bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _forma
 			auto hexStringBegin = it;
 			while (it != _list.end() && *it != '"')
 				++it;
-			bytes hexBytes = fromHex(string(hexStringBegin, it));
+			string hexString(hexStringBegin, it);
+			bytes hexBytes = fromHex(hexString);
 			expect(it, _list.end(), '"');
 
-			hexBytes += bytes((32 - hexBytes.size() % 32) % 32, 0);
+			if (padded)
+				hexBytes += bytes((32 - hexBytes.size() % 32) % 32, 0);
 			result += hexBytes;
 			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{hexBytes.size(), ByteRangeFormat::HexString});
+				_formatList->emplace_back(ByteRangeFormat{hexBytes.size(), ByteRangeFormat::HexString, padded});
 		}
-		else if (starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "rawbytes("))
+		else if (starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "unpadded("))
 		{
-			size_t byteCount = 0;
-			it += 9; // skip "rawbytes("
+			it += 9; // skip "unpadded("
+
+			unsigned int parenthesisLevel = 1;
+			auto nestedListBegin = it;
 			while (it != _list.end())
 			{
-				auto valueBegin = it;
-				while (it != _list.end() && !isspace(*it) && *it != ',' && *it != ')')
-					++it;
-				// TODO: replace this by explicitly parsing the byte
-				u256 value(string(valueBegin, it));
-				solAssert(value <= 0xFF, "Invalid raw byte.");
-				result.push_back(uint8_t(value));
-				byteCount++;
-				skipWhitespace(it, _list.end());
-				solAssert(it != _list.end(), "Unexpected end of raw bytes data.");
-				if (*it == ')')
-					break;
-				expect(it, _list.end(), ',');
-				skipWhitespace(it, _list.end());
+				if (*it == '(') ++parenthesisLevel;
+				else if (*it == ')')
+				{
+					--parenthesisLevel;
+					if (parenthesisLevel == 0)
+						break;
+				}
+				++it;
 			}
+			result += stringToBytes(string(nestedListBegin, it), _formatList, false);
 			expect(it, _list.end(), ')');
-
-			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{byteCount, ByteRangeFormat::RawBytes});
 		}
 		else if(starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "true"))
 		{
 			it += 4; // skip "true"
-			result += bytes(31, 0) + bytes{1};
+			if (padded)
+				result += bytes(31, 0) + bytes{1};
+			else
+				result += bytes{1};
 			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Bool});
+				_formatList->emplace_back(ByteRangeFormat{padded ? 32u : 1u, ByteRangeFormat::Bool, padded});
 		}
 		else if(starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "false"))
 		{
 			it += 5; // skip "false"
-			result += bytes(32, 0);
+			if (padded)
+				result += bytes(32, 0);
+			else
+				result += bytes{0};
 			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Bool});
+				_formatList->emplace_back(ByteRangeFormat{padded ? 32u : 1u, ByteRangeFormat::Bool, padded});
 		}
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Test expectations contain invalidly formatted data."));
