@@ -161,31 +161,6 @@ std::string SemanticsTest::ByteRangeFormat::tryFormat(
 			result << "\"";
 			break;
 		}
-		case ByteRangeFormat::DynString:
-		{
-			solAssert(byteRange.size() > 64, "Invalid string format.");
-			result << "string(\"";
-			auto it = byteRange.begin();
-			if (fromBigEndian<u256>(bytes(it, it + 32)) != u256(0x20))
-				return {};
-			it += 32;
-			auto length256 = fromBigEndian<u256>(bytes(it, it + 32));
-			it += 32;
-			if (byteRange.size() < 64 + length256)
-				return {};
-			size_t length = size_t(length256);
-			for(size_t i = 0; i < length; i++)
-			{
-				if (!isprint(*it) || *it == '"')
-					return {};
-				result << *it;
-				++it;
-			}
-			result << "\")";
-			if (bytes(it, byteRange.end()) != bytes((32 - length % 32) % 32, 0))
-				return {};
-			break;
-		}
 	}
 
 	return result.str();
@@ -367,25 +342,6 @@ bytes SemanticsTest::stringToBytes(string _list, vector<ByteRangeFormat>* _forma
 			result += bytes(32, 0);
 			if (_formatList)
 				_formatList->emplace_back(ByteRangeFormat{32, ByteRangeFormat::Bool});
-		}
-		else if(starts_with(boost::iterator_range<string::iterator>(it, _list.end()), "string("))
-		{
-			it += 7; // skip "string("
-			expect(it, _list.end(), '"');
-			auto stringBegin = it;
-			// TODO: handle escaped quotes, resp. escape sequences in general
-			while (it != _list.end() && *it != '"')
-				++it;
-			bytes stringBytes = asBytes(string(stringBegin, it));
-			expect(it, _list.end(), '"');
-			expect(it, _list.end(), ')');
-
-			result += toBigEndian(u256(0x20));
-			result += toBigEndian(u256(stringBytes.size()));
-			stringBytes += bytes((32 - stringBytes.size() % 32) % 32, 0);
-			result += stringBytes;
-			if (_formatList)
-				_formatList->emplace_back(ByteRangeFormat{64 + stringBytes.size(), ByteRangeFormat::DynString});
 		}
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Test expectations contain invalidly formatted data."));

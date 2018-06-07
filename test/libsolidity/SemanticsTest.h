@@ -57,8 +57,7 @@ public:
 			Hex,
 			HexString,
 			RawBytes,
-			SignedDec,
-			DynString
+			SignedDec
 		};
 
 		std::size_t length;
